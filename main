@@ -1,0 +1,233 @@
+//
+//  main.cpp
+//  mitra
+//
+//  Created by Kniel,Karl E on 4/18/16.
+//  Copyright © 2016 Kniel,Karl E. All rights reserved.
+//
+
+#include <iostream>
+#include <vector>
+#include <unordered_map>
+#include <queue>
+#include <algorithm>
+
+using namespace std;
+
+
+int incantations(string charm1, string charm2)
+{
+    const int length1 = charm1.size();
+    const int length2 = charm2.size();
+    
+    int * distance = new int[length2 + 1];
+    
+    
+    
+    for(int i = 0; i <= length1; i++)
+    {
+        distance[i] = i;
+    }
+    
+    int i = 0;
+    
+    for(string::const_iterator iter1 = charm1.begin(); iter1 != charm1.end(); iter1++, i++)
+    {
+        distance[0] = i + 1;
+        int end = i;
+        int k = 0;
+        
+        for(string::const_iterator iter2 = charm2.begin(); iter2 != charm2.end(); iter2++, k++)
+        {
+            int top = distance[k + 1];
+            
+            if(*iter1 == *iter2)
+            {
+                distance[k + 1] = end;
+            }else
+            {
+                int t(top < end ? top:end);
+                distance[k + 1] = (distance[k] < t ? distance[k]:t) + 1;
+            }
+            
+            end = top;
+        }
+    }
+    
+    return distance[length2];
+}
+
+int minDistance(int dist[], bool sptSet[], vector<string> charms)
+{
+    // Initialize min value
+    int min = INT_MAX, min_index;
+    int V = charms.size();
+    
+    for (int v = 0; v < V; v++)
+        if (sptSet[v] == false && dist[v] <= min)
+            min = dist[v], min_index = v;
+    
+    return min_index;
+}
+
+void canTravel(string charm1, string charm2, vector<string> charms, unordered_map<string, vector<int>> realm, int N)
+{
+    int graph[N][N];
+    int tempIncant;
+    
+    for(int i = 0; i < N; i++)
+    {
+        int rowMax = realm.find(charms.at(i))->second.size();
+        
+        for(int k = 0; k < N; k++)
+        {
+            if(i == k)
+            {
+                graph[i][k] = 0;
+            }else
+            {
+                tempIncant = incantations(charms.at(i), charms.at(k));
+                
+                if(rowMax < tempIncant)
+                {
+                    tempIncant = 0;
+                }
+                
+                graph[i][k] = tempIncant;
+            }
+        }
+    }
+    
+    int V = charms.size();
+    
+    int dist[V];
+    int gems[V];
+    bool sptSet[V];
+    
+    for (int i = 0; i < V; i++)
+    {
+        dist[i] = INT_MAX, sptSet[i] = false;
+    }
+    
+    int src = find(charms.begin(), charms.end(), charm1) - charms.begin();
+    
+    // Distance of source vertex from itself is always 0
+    dist[src] = 0;
+    
+    // Find shortest path for all vertices
+    for (int count = 0; count < V-1; count++)
+    {
+        // Pick the minimum distance vertex from the set of vertices not
+        // yet processed. u is always equal to src in first iteration.
+        int u = minDistance(dist, sptSet, charms);
+        
+        // Mark the picked vertex as processed
+        sptSet[u] = true;
+        
+        // Update dist value of the adjacent vertices of the picked vertex.
+        for(int v = 0; v < V; v++)
+        {
+            if (!sptSet[v] && graph[u][v] && dist[u] != INT_MAX && dist[u]+graph[u][v] < dist[v])
+            {
+                dist[v] = dist[u] + graph[u][v];
+                int weight = graph[u][v];
+                vector<int>tempGem = realm.find(charms.at(u))->second;
+                int sum = 0;
+                
+                for(int i = 0; i < weight; i++)
+                {
+                    sum += tempGem.at(i);
+                }
+                
+                gems[v] = gems[u] + sum;
+            }
+        }
+        
+    }
+    
+    for(int i = 0; i < V; i++)
+    {
+        cout<<i<<" "<<dist[i]<<endl;
+    }
+    
+    int src1 = find(charms.begin(), charms.end(), charm2) - charms.begin();
+    cout<<dist[src1]<< " "<<gems[src1]<<endl;
+    
+}
+
+
+
+vector<int> seq(vector<int>array)
+{
+    long length = array.size();
+    vector<int> temp1;
+    vector<int> seqMax;
+    long seqMaxLength = 0;
+    
+    for(int i = 0; i < length; i++)
+    {
+        for(int k = i; k < length; k++)
+        {
+            if(k == i)
+            {
+                temp1.push_back(array.at(k));
+            }else if(temp1.back() < array.at(k))
+            {
+                temp1.push_back(array.at(k));
+            }
+        }
+        if(temp1.size() > seqMax.size())
+        {
+            seqMaxLength = temp1.size();
+            seqMax = temp1;
+        }
+        temp1.clear();
+    }
+    
+    return seqMax;
+}
+
+int main()
+{
+    int N, magiNum, maxIncant, tempIncant;
+    string charm, start, end;
+    vector<string> charms;
+    vector<int> magis;
+    unordered_map<string, vector<int>> realm;
+    
+    cin>>N;
+    
+    for(int i = 0; i < N; i++)
+    {
+        cin>>charm;
+        charms.push_back(charm);
+        cin>>magiNum;
+        magis.resize(magiNum);
+        for(int j = 0; j < magiNum; j++)
+        {
+            
+            cin>>magis.at(j);
+        }
+        
+        realm.emplace(charm, seq(magis));
+    }
+    
+    cin>>start;
+    cin>>end;
+    maxIncant = incantations(start, end);
+    
+    
+//    for(int i = 0; i < N; i++)
+//    {
+//        for(int k = 0; k < N; k++)
+//        {
+//            cout<<graph[i][k];
+//        }
+//        cout<<endl;
+//    }
+    
+    canTravel(start, end, charms, realm, N);
+    canTravel(end, start, charms, realm, N);
+    
+    return 0;
+}
