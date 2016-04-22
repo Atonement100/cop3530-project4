@@ -12,6 +12,8 @@
 #include <queue>
 #include <algorithm>
 
+#define INT_MAX 99999999
+
 using namespace std;
 
 
@@ -57,17 +59,20 @@ int incantations(string charm1, string charm2)
     return distance[length2];
 }
 
-int minDistance(int dist[], bool sptSet[], vector<string> charms)
+int minVertDist(int lvsDist[], bool flag[], vector<string> charms)
 {
-    // Initialize min value
-    int min = INT_MAX, min_index;
-    int V = charms.size();
+    int min = INT_MAX, mIndex = 0;
+    int numVert = charms.size();
     
-    for (int v = 0; v < V; v++)
-        if (sptSet[v] == false && dist[v] <= min)
-            min = dist[v], min_index = v;
-    
-    return min_index;
+    for (int v = 0; v < numVert; v++)
+    {
+        if (flag[v] == false && lvsDist[v] <= min)
+        {
+            min = lvsDist[v];
+            mIndex = v;
+        }
+    }
+    return mIndex;
 }
 
 void canTravel(string charm1, string charm2, vector<string> charms, unordered_map<string, vector<int>> realm, int N)
@@ -98,38 +103,33 @@ void canTravel(string charm1, string charm2, vector<string> charms, unordered_ma
         }
     }
     
-    int V = charms.size();
+    int numVert = charms.size();
+    int lvsDist[numVert];
+    int gems[numVert];
+    bool flag[numVert];
     
-    int dist[V];
-    int gems[V];
-    bool sptSet[V];
     
-    for (int i = 0; i < V; i++)
+    
+    for (int i = 0; i < numVert; i++)
     {
-        dist[i] = INT_MAX, sptSet[i] = false;
+        lvsDist[i] = INT_MAX, flag[i] = false;
+        gems[i] = 0;
     }
     
     int src = find(charms.begin(), charms.end(), charm1) - charms.begin();
-    
-    // Distance of source vertex from itself is always 0
-    dist[src] = 0;
-    
-    // Find shortest path for all vertices
-    for (int count = 0; count < V-1; count++)
+
+    lvsDist[src] = 0;
+
+    for (int count = 0; count < numVert-1; count++)
     {
-        // Pick the minimum distance vertex from the set of vertices not
-        // yet processed. u is always equal to src in first iteration.
-        int u = minDistance(dist, sptSet, charms);
-        
-        // Mark the picked vertex as processed
-        sptSet[u] = true;
-        
-        // Update dist value of the adjacent vertices of the picked vertex.
-        for(int v = 0; v < V; v++)
+        int u = minVertDist(lvsDist, flag, charms);
+        flag[u] = true;
+
+        for(int v = 0; v < numVert; v++)
         {
-            if (!sptSet[v] && graph[u][v] && dist[u] != INT_MAX && dist[u]+graph[u][v] < dist[v])
+            if (!flag[v] && graph[u][v] && lvsDist[u] != INT_MAX && lvsDist[u]+graph[u][v] < lvsDist[v])
             {
-                dist[v] = dist[u] + graph[u][v];
+                lvsDist[v] = lvsDist[u] + graph[u][v];
                 int weight = graph[u][v];
                 vector<int>tempGem = realm.find(charms.at(u))->second;
                 int sum = 0;
@@ -144,18 +144,18 @@ void canTravel(string charm1, string charm2, vector<string> charms, unordered_ma
         }
         
     }
-    
-    for(int i = 0; i < V; i++)
-    {
-        cout<<i<<" "<<dist[i]<<endl;
-    }
+
     
     int src1 = find(charms.begin(), charms.end(), charm2) - charms.begin();
-    cout<<dist[src1]<< " "<<gems[src1]<<endl;
-    
+    if (gems[src1] == 0 && lvsDist[src1] != 0) {
+        cout << "IMPOSSIBLE" << endl;
+        return;
+    }
+    else{
+        cout<<lvsDist[src1]<< " "<<gems[src1]<<endl;
+        return;
+    }
 }
-
-
 
 vector<int> seq(vector<int>array)
 {
@@ -215,16 +215,6 @@ int main()
     cin>>start;
     cin>>end;
     maxIncant = incantations(start, end);
-    
-    
-//    for(int i = 0; i < N; i++)
-//    {
-//        for(int k = 0; k < N; k++)
-//        {
-//            cout<<graph[i][k];
-//        }
-//        cout<<endl;
-//    }
     
     canTravel(start, end, charms, realm, N);
     canTravel(end, start, charms, realm, N);
