@@ -38,9 +38,9 @@ int incantations(string charm1, string charm2)
         charm1 = temp;
     }
     
-    
+     //cout << length1 << " " << charm1<< " " << length2 << " "<< charm2 << endl;
     // create pointer to an array of size of the shorter charm
-    int * distance = new int[length2 + 1];
+    int * distance = new int[length1 + 1];
     
     
     // the maximum levenshtein distance is going to be the length of the longer charm
@@ -112,6 +112,7 @@ void canTravel(string charm1, string charm2, vector<string> charms, unordered_ma
                 graph[i][k] = 0;
             }else
             {
+                 //cout << "i!=k call incantation " << charms.at(i) << " " << charms.at(k) << " " << i << k << endl;
                 tempIncant = incantations(charms.at(i), charms.at(k));
                 
                 if(rowMax < tempIncant)
