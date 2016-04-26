@@ -12,37 +12,54 @@
 #include <queue>
 #include <algorithm>
 
-#define INT_MAX 99999999
+#define INT_INF 99999999
 
 using namespace std;
 
-
+// method to calculate levenshtein distance of two strings
 int incantations(string charm1, string charm2)
 {
-    const int length1 = charm1.size();
-    const int length2 = charm2.size();
+    // variables for string lengths
+    int length1, length2;
     
+    // make sure charm 1 is the larger charm
+    if (charm1.size() > charm2.size()) {
+        length1 = charm1.size();
+        length2 = charm2.size();
+    }
+    // else switch the charms for calculation purposes
+    else{
+        length1 = charm2.size();
+        length2 = charm1.size();
+        string temp = charm2;
+        charm2 = charm1;
+        charm1 = temp;
+    }
+    
+    
+    // create pointer to an array of size of the shorter charm
     int * distance = new int[length2 + 1];
     
     
-    
+    // the maximum levenshtein distance is going to be the length of the longer charm
     for(int i = 0; i <= length1; i++)
     {
         distance[i] = i;
     }
     
     int i = 0;
-    
+    //  calculates the levenshtein distance between the strings
+    // by first iterating through the first string
     for(string::const_iterator iter1 = charm1.begin(); iter1 != charm1.end(); iter1++, i++)
     {
         distance[0] = i + 1;
         int end = i;
         int k = 0;
-        
+        //then iterating through the second string
         for(string::const_iterator iter2 = charm2.begin(); iter2 != charm2.end(); iter2++, k++)
         {
             int top = distance[k + 1];
-            
+            // if two characters are equal
             if(*iter1 == *iter2)
             {
                 distance[k + 1] = end;
@@ -55,13 +72,13 @@ int incantations(string charm1, string charm2)
             end = top;
         }
     }
-    
-    return distance[length2];
+       return distance[length2];
 }
 
+//gets min distance to adjacent realms
 int minVertDist(int lvsDist[], bool flag[], vector<string> charms)
 {
-    int min = INT_MAX, mIndex = 0;
+    int min = INT_INF, mIndex = 0;
     int numVert = charms.size();
     
     for (int v = 0; v < numVert; v++)
@@ -75,10 +92,14 @@ int minVertDist(int lvsDist[], bool flag[], vector<string> charms)
     return mIndex;
 }
 
+//checks if travel is possible from starting realm to end realm under constraints of problem
+//prints 
 void canTravel(string charm1, string charm2, vector<string> charms, unordered_map<string, vector<int>> realm, int N)
 {
     int graph[N][N];
     int tempIncant;
+    
+    
     
     for(int i = 0; i < N; i++)
     {
@@ -112,22 +133,22 @@ void canTravel(string charm1, string charm2, vector<string> charms, unordered_ma
     
     for (int i = 0; i < numVert; i++)
     {
-        lvsDist[i] = INT_MAX, flag[i] = false;
+        lvsDist[i] = INT_INF, flag[i] = false;
         gems[i] = 0;
     }
     
     int src = find(charms.begin(), charms.end(), charm1) - charms.begin();
-
+    
     lvsDist[src] = 0;
-
+    
     for (int count = 0; count < numVert-1; count++)
     {
         int u = minVertDist(lvsDist, flag, charms);
         flag[u] = true;
-
+        
         for(int v = 0; v < numVert; v++)
         {
-            if (!flag[v] && graph[u][v] && lvsDist[u] != INT_MAX && lvsDist[u]+graph[u][v] < lvsDist[v])
+            if (!flag[v] && graph[u][v] && lvsDist[u] != INT_INF && lvsDist[u]+graph[u][v] < lvsDist[v])
             {
                 lvsDist[v] = lvsDist[u] + graph[u][v];
                 int weight = graph[u][v];
@@ -144,7 +165,7 @@ void canTravel(string charm1, string charm2, vector<string> charms, unordered_ma
         }
         
     }
-
+    
     
     int src1 = find(charms.begin(), charms.end(), charm2) - charms.begin();
     if (gems[src1] == 0 && lvsDist[src1] != 0) {
@@ -189,35 +210,72 @@ vector<int> seq(vector<int>array)
 
 int main()
 {
-    int N, magiNum, maxIncant, tempIncant;
+    int N, magiNum;
     string charm, start, end;
     vector<string> charms;
     vector<int> magis;
     unordered_map<string, vector<int>> realm;
     
     cin>>N;
-    
+    cout << "n received";
     for(int i = 0; i < N; i++)
     {
         cin>>charm;
         charms.push_back(charm);
         cin>>magiNum;
         magis.resize(magiNum);
+        cout << magiNum << endl;
+        
         for(int j = 0; j < magiNum; j++)
         {
-            
+            cout << j << endl;
             cin>>magis.at(j);
+            //cout << j << endl;
         }
         
         realm.emplace(charm, seq(magis));
     }
-    
+
     cin>>start;
     cin>>end;
-    maxIncant = incantations(start, end);
-    
+
+    cout << start << " " << end << " " << N;
     canTravel(start, end, charms, realm, N);
+    cout << start << " " << end << " " << N;
     canTravel(end, start, charms, realm, N);
-    
+
+    cout << "dfasd";
     return 0;
 }
+
+/* 4
+sitting
+6
+1 2 1 3 2 4
+knitting
+4
+4 2 3 1
+knowing
+5
+2 3 1 4 2
+kneeding
+4
+1 3 4 2
+sitting
+kneeding */
+
+/* 4
+flor
+7
+4 3 2 1 2 3 4
+flower
+4
+5 6 7 8 
+collapse
+4
+2 1 2 3
+teamer
+3
+4 5 6
+teamer
+flor */
